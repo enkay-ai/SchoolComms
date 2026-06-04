@@ -2,6 +2,7 @@ let currentTab = "class";
 let currentUser = null;
 let statFilter = "all";
 let viewedPosts = [];
+let userPinnedPosts = [];
 
 let posts = [
   {
@@ -14,7 +15,6 @@ let posts = [
     author: "Admin Team",
     authorEmail: "admin@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
-    pinned: true,
     urgent: false
   },
   {
@@ -27,7 +27,6 @@ let posts = [
     author: "Naveen Kumar",
     authorEmail: "demo@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
-    pinned: false,
     urgent: false
   },
   {
@@ -40,7 +39,6 @@ let posts = [
     author: "Staff Notice",
     authorEmail: "staff@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
-    pinned: false,
     urgent: true
   }
 ];
@@ -80,56 +78,6 @@ function login() {
   lucide.createIcons();
 }
 
-function filterByStat(type) {
-  statFilter = type;
-
-  if (["class", "admin", "cover"].includes(type)) {
-    currentTab = type;
-    setActiveTabButton(type);
-  }
-
-  renderPosts();
-}
-
-function markViewed(postId) {
-  viewedPosts.push(postId);
-  renderPosts();
-  updateStats();
-}
-
-function canManage(post) {
-  if (!currentUser) return false;
-  return currentUser.role === "admin" || post.authorEmail === currentUser.email;
-}
-
-function deletePost(postId) {
-  const post = posts.find(p => p.id === postId);
-
-  if (!canManage(post)) {
-    alert("Only the creator or an admin can delete this post.");
-    return;
-  }
-
-  if (confirm("Are you sure you want to delete this post?")) {
-    posts = posts.filter(p => p.id !== postId);
-    renderPosts();
-    updateStats();
-  }
-}
-
-function togglePin(postId) {
-  const post = posts.find(p => p.id === postId);
-
-  if (!canManage(post)) {
-    alert("Only the creator or an admin can pin or unpin this post.");
-    return;
-  }
-
-  post.pinned = !post.pinned;
-  renderPosts();
-  updateStats();
-}
-
 function showView(viewId) {
   document.querySelectorAll("main section").forEach(section => {
     section.classList.add("hidden");
@@ -151,13 +99,23 @@ function setTab(tab) {
   renderPosts();
 }
 
+function filterByStat(type) {
+  statFilter = type;
+
+  if (["class", "admin", "cover"].includes(type)) {
+    currentTab = type;
+    setActiveTabButton(type);
+  }
+
+  renderPosts();
+}
+
 function createPost() {
   const category = document.getElementById("categoryInput").value;
   const title = document.getElementById("titleInput").value.trim();
   const classGroup = document.getElementById("postClassInput").value;
   const subject = document.getElementById("subjectInput").value;
   const content = document.getElementById("contentInput").value.trim();
-  const pinned = document.getElementById("pinnedInput").checked;
   const urgent = document.getElementById("urgentInput").checked;
 
   if (!title || !content) {
@@ -175,13 +133,11 @@ function createPost() {
     author: currentUser ? currentUser.name : "Demo User",
     authorEmail: currentUser ? currentUser.email : "demo@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
-    pinned,
     urgent
   });
 
   document.getElementById("titleInput").value = "";
   document.getElementById("contentInput").value = "";
-  document.getElementById("pinnedInput").checked = false;
   document.getElementById("urgentInput").checked = false;
 
   currentTab = category;
@@ -190,6 +146,49 @@ function createPost() {
   setActiveTabButton(category);
   updateStats();
   renderPosts();
+}
+
+function markViewed(postId) {
+  if (!viewedPosts.includes(postId)) {
+    viewedPosts.push(postId);
+  }
+
+  renderPosts();
+  updateStats();
+}
+
+function togglePin(postId) {
+  if (userPinnedPosts.includes(postId)) {
+    userPinnedPosts = userPinnedPosts.filter(id => id !== postId);
+  } else {
+    userPinnedPosts.push(postId);
+  }
+
+  renderPosts();
+  updateStats();
+}
+
+function canDelete(post) {
+  if (!currentUser || !post) return false;
+  return currentUser.role === "admin" || post.authorEmail === currentUser.email;
+}
+
+function deletePost(postId) {
+  const post = posts.find(p => p.id === postId);
+
+  if (!canDelete(post)) {
+    alert("Only the creator of the post or an admin can delete this post.");
+    return;
+  }
+
+  if (confirm("Are you sure you want to delete this post?")) {
+    posts = posts.filter(p => p.id !== postId);
+    viewedPosts = viewedPosts.filter(id => id !== postId);
+    userPinnedPosts = userPinnedPosts.filter(id => id !== postId);
+
+    renderPosts();
+    updateStats();
+  }
 }
 
 function setActiveTabButton(category) {
@@ -216,13 +215,23 @@ function renderPosts() {
 
   let filtered = posts.filter(post => !viewedPosts.includes(post.id));
 
-  if (statFilter === "pinned") filtered = filtered.filter(post => post.pinned);
-  else if (statFilter === "urgent") filtered = filtered.filter(post => post.urgent);
-  else if (["class", "admin", "cover"].includes(statFilter)) filtered = filtered.filter(post => post.category === statFilter);
-  else filtered = filtered.filter(post => post.category === currentTab);
+  if (statFilter === "pinned") {
+    filtered = filtered.filter(post => userPinnedPosts.includes(post.id));
+  } else if (statFilter === "urgent") {
+    filtered = filtered.filter(post => post.urgent);
+  } else if (["class", "admin", "cover"].includes(statFilter)) {
+    filtered = filtered.filter(post => post.category === statFilter);
+  } else {
+    filtered = filtered.filter(post => post.category === currentTab);
+  }
 
-  if (classFilter) filtered = filtered.filter(post => post.classGroup === classFilter);
-  if (subjectFilter) filtered = filtered.filter(post => post.subject === subjectFilter);
+  if (classFilter) {
+    filtered = filtered.filter(post => post.classGroup === classFilter);
+  }
+
+  if (subjectFilter) {
+    filtered = filtered.filter(post => post.subject === subjectFilter);
+  }
 
   if (search) {
     filtered = filtered.filter(post =>
@@ -234,9 +243,12 @@ function renderPosts() {
   }
 
   filtered.sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return 0;
+    const aPinned = userPinnedPosts.includes(a.id);
+    const bPinned = userPinnedPosts.includes(b.id);
+
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return b.id - a.id;
   });
 
   if (filtered.length === 0) {
@@ -262,7 +274,7 @@ function renderPosts() {
         <div class="badges">
           <span>${post.classGroup}</span>
           <span>${post.subject}</span>
-          ${post.pinned ? `<span class="pinned-badge">Pinned</span>` : ""}
+          ${userPinnedPosts.includes(post.id) ? `<span class="pinned-badge">Pinned by you</span>` : ""}
           ${post.urgent ? `<span class="urgent-badge">Urgent</span>` : ""}
         </div>
       </div>
@@ -271,8 +283,12 @@ function renderPosts() {
 
       <div class="post-actions">
         <button class="viewed" onclick="markViewed(${post.id})">Viewed</button>
-        <button onclick="togglePin(${post.id})">${post.pinned ? "Unpin" : "Pin"}</button>
-        <button class="danger" onclick="deletePost(${post.id})">Delete</button>
+
+        <button onclick="togglePin(${post.id})">
+          ${userPinnedPosts.includes(post.id) ? "Unpin for me" : "Pin for me"}
+        </button>
+
+        ${canDelete(post) ? `<button class="danger" onclick="deletePost(${post.id})">Delete</button>` : ""}
       </div>
     </article>
   `).join("");
@@ -284,7 +300,7 @@ function updateStats() {
   const visiblePosts = posts.filter(post => !viewedPosts.includes(post.id));
 
   document.getElementById("totalPosts").textContent = visiblePosts.length;
-  document.getElementById("pinnedPosts").textContent = visiblePosts.filter(p => p.pinned).length;
+  document.getElementById("pinnedPosts").textContent = visiblePosts.filter(p => userPinnedPosts.includes(p.id)).length;
   document.getElementById("urgentPosts").textContent = visiblePosts.filter(p => p.urgent).length;
   document.getElementById("classPosts").textContent = visiblePosts.filter(p => p.category === "class").length;
   document.getElementById("adminPosts").textContent = visiblePosts.filter(p => p.category === "admin").length;
