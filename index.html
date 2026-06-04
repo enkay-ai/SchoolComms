@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>School Social Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h1>School Social Hub</h1>
+      <p>Internal communication platform for school staff.</p>
+
+      <input type="email" id="emailInput" placeholder="Enter school email" />
+      <button onclick="login()">Login</button>
+
+      <small>Demo access restricted to school domain users.</small>
+    </div>
+  </div>
+
+  <div id="app" class="app hidden">
+
+    <aside class="sidebar">
+      <h2>School Hub</h2>
+      <button onclick="showSection('feed')">Home Feed</button>
+      <button onclick="showSection('noticeboard')">Noticeboard</button>
+      <button onclick="showSection('cover')">Cover Requests</button>
+      <button onclick="showSection('classes')">Class Groups</button>
+      <button onclick="showSection('about')">About System</button>
+    </aside>
+
+    <main class="main-content">
+
+      <section id="feed" class="section active">
+        <h1>Staff Feed</h1>
+
+        <div class="post-box">
+          <textarea id="postInput" placeholder="Share a classroom update..."></textarea>
+          <button onclick="addPost()">Post Update</button>
+        </div>
+
+        <div id="postList"></div>
+      </section>
+
+      <section id="noticeboard" class="section">
+        <h1>School Noticeboard</h1>
+        <div class="notice pinned">
+          <h3>📌 Weekly Staff Briefing</h3>
+          <p>Please check the weekly updates and upcoming school events.</p>
+        </div>
+        <div class="notice">
+          <h3>Open Day Update</h3>
+          <p>Classroom tours are available weekly until the next open day is confirmed.</p>
+        </div>
+      </section>
+
+      <section id="cover" class="section">
+        <h1>Cover Requests</h1>
+
+        <div class="post-box">
+          <input id="coverInput" placeholder="Example: Need cover for Class 7 Period 3" />
+          <button onclick="addCoverRequest()">Add Request</button>
+        </div>
+
+        <div id="coverList"></div>
+      </section>
+
+      <section id="classes" class="section">
+        <h1>Class Groups</h1>
+        <div class="cards">
+          <div class="card">Kindergarten</div>
+          <div class="card">Lower School</div>
+          <div class="card">Middle School</div>
+          <div class="card">Upper School</div>
+          <div class="card">Admin Team</div>
+        </div>
+      </section>
+
+      <section id="about" class="section">
+        <h1>About This System</h1>
+        <p>
+          School Social Hub is a prototype internal communication platform designed
+          to improve staff collaboration, classroom visibility, announcements,
+          and cover communication within a school environment.
+        </p>
+
+        <h3>Technology Used</h3>
+        <p>HTML, CSS, JavaScript, GitHub Pages. Future backend: Google Sheets and Apps Script.</p>
+
+        <h3>Problem Solved</h3>
+        <p>
+          Reduces fragmented communication across email and informal messages by
+          creating one shared digital space for staff updates and operational notices.
+        </p>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
