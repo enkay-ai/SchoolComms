@@ -3,101 +3,176 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>School Social Hub</title>
+  <title>SchoolComms</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-  <div id="loginScreen" class="login-screen">
-    <div class="login-card">
-      <h1>School Social Hub</h1>
-      <p>Internal communication platform for school staff.</p>
-
-      <input type="email" id="emailInput" placeholder="Enter school email" />
-     <button id="loginBtn">Login</button>
-
-      <small>Demo access restricted to school domain users.</small>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon"><i data-lucide="graduation-cap"></i></div>
+      <h2>SchoolComms</h2>
     </div>
-  </div>
 
-  <div id="app" class="app hidden">
+    <nav id="navMenu" class="nav hidden">
+      <button onclick="showView('dashboard')" class="nav-btn active"><i data-lucide="layout-dashboard"></i> Dashboard</button>
+      <button onclick="showView('newPost')"><i data-lucide="plus-circle"></i> New Post</button>
+      <button onclick="showView('profile')"><i data-lucide="user-round"></i> My Profile</button>
+    </nav>
 
-    <aside class="sidebar">
-      <h2>School Hub</h2>
-      <button onclick="showSection('feed')">Home Feed</button>
-      <button onclick="showSection('noticeboard')">Noticeboard</button>
-      <button onclick="showSection('cover')">Cover Requests</button>
-      <button onclick="showSection('classes')">Class Groups</button>
-      <button onclick="showSection('about')">About System</button>
-    </aside>
+    <div id="avatar" class="avatar hidden">N</div>
+  </header>
 
-    <main class="main-content">
+  <main>
 
-      <section id="feed" class="section active">
-        <h1>Staff Feed</h1>
+    <section id="landing" class="landing">
+      <div class="hero-icon"><i data-lucide="graduation-cap"></i></div>
+      <h1>The staff communication hub<br>your school deserves</h1>
+      <p>Class updates, admin notices, and cover arrangements — all in one professional platform designed for busy school staff.</p>
 
-        <div class="post-box">
-          <textarea id="postInput" placeholder="Share a classroom update..."></textarea>
-          <button onclick="addPost()">Post Update</button>
+      <div class="signin-card">
+        <input id="emailInput" type="email" placeholder="Enter school email address" />
+        <button onclick="login()">Sign in to continue</button>
+        <small>Demo domain restriction: @greenwichwaldorfschool.com</small>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <i data-lucide="book-open"></i>
+          <h3>Class Updates</h3>
+          <p>Teachers post classroom updates, homework, reminders, and resources.</p>
         </div>
 
-        <div id="postList"></div>
-      </section>
-
-      <section id="noticeboard" class="section">
-        <h1>School Noticeboard</h1>
-        <div class="notice pinned">
-          <h3>📌 Weekly Staff Briefing</h3>
-          <p>Please check the weekly updates and upcoming school events.</p>
-        </div>
-        <div class="notice">
-          <h3>Open Day Update</h3>
-          <p>Classroom tours are available weekly until the next open day is confirmed.</p>
-        </div>
-      </section>
-
-      <section id="cover" class="section">
-        <h1>Cover Requests</h1>
-
-        <div class="post-box">
-          <input id="coverInput" placeholder="Example: Need cover for Class 7 Period 3" />
-          <button onclick="addCoverRequest()">Add Request</button>
+        <div class="feature-card">
+          <i data-lucide="bell"></i>
+          <h3>Admin Noticeboard</h3>
+          <p>School-wide announcements from leadership, pinned for visibility.</p>
         </div>
 
-        <div id="coverList"></div>
-      </section>
-
-      <section id="classes" class="section">
-        <h1>Class Groups</h1>
-        <div class="cards">
-          <div class="card">Kindergarten</div>
-          <div class="card">Lower School</div>
-          <div class="card">Middle School</div>
-          <div class="card">Upper School</div>
-          <div class="card">Admin Team</div>
+        <div class="feature-card">
+          <i data-lucide="users-round"></i>
+          <h3>Cover & Staff Notices</h3>
+          <p>Cover arrangements and staff communication in one organised feed.</p>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section id="about" class="section">
-        <h1>About This System</h1>
-        <p>
-          School Social Hub is a prototype internal communication platform designed
-          to improve staff collaboration, classroom visibility, announcements,
-          and cover communication within a school environment.
-        </p>
+    <section id="dashboard" class="dashboard hidden">
+      <div class="stats-grid">
+        <div class="stat-card"><i data-lucide="clipboard-list"></i><div><h2 id="totalPosts">0</h2><p>Total Posts</p></div></div>
+        <div class="stat-card"><i data-lucide="pin"></i><div><h2 id="pinnedPosts">0</h2><p>Pinned</p></div></div>
+        <div class="stat-card urgent"><i data-lucide="triangle-alert"></i><div><h2 id="urgentPosts">0</h2><p>Urgent</p></div></div>
+        <div class="stat-card"><i data-lucide="book-open"></i><div><h2 id="classPosts">0</h2><p>Class Updates</p></div></div>
+        <div class="stat-card"><i data-lucide="bell"></i><div><h2 id="adminPosts">0</h2><p>Admin Notices</p></div></div>
+        <div class="stat-card"><i data-lucide="calendar-days"></i><div><h2 id="coverPosts">0</h2><p>Cover Notices</p></div></div>
+      </div>
 
-        <h3>Technology Used</h3>
-        <p>HTML, CSS, JavaScript, GitHub Pages. Future backend: Google Sheets and Apps Script.</p>
+      <div class="feed-panel">
+        <div class="tabs">
+          <button class="tab active" onclick="setTab('class')">Class Updates</button>
+          <button class="tab" onclick="setTab('admin')">Admin Noticeboard</button>
+          <button class="tab" onclick="setTab('cover')">Cover & Staff Notices</button>
+        </div>
 
-        <h3>Problem Solved</h3>
-        <p>
-          Reduces fragmented communication across email and informal messages by
-          creating one shared digital space for staff updates and operational notices.
-        </p>
-      </section>
+        <div class="filters">
+          <input id="searchInput" oninput="renderPosts()" placeholder="Search posts..." />
+          <select id="classFilter" onchange="renderPosts()">
+            <option value="">All classes</option>
+            <option>Kindergarten</option>
+            <option>Class 1</option>
+            <option>Class 2</option>
+            <option>Class 3</option>
+            <option>Class 4</option>
+            <option>Class 5</option>
+            <option>Class 6</option>
+            <option>Class 7</option>
+            <option>Class 8</option>
+            <option>Upper School</option>
+          </select>
 
-    </main>
-  </div>
+          <select id="subjectFilter" onchange="renderPosts()">
+            <option value="">All subjects</option>
+            <option>Computing</option>
+            <option>Maths</option>
+            <option>Science</option>
+            <option>English</option>
+            <option>Art</option>
+            <option>Admin</option>
+          </select>
+
+          <button onclick="showView('newPost')" class="primary-btn"><i data-lucide="plus-circle"></i> New Post</button>
+        </div>
+
+        <div id="postList" class="post-list"></div>
+      </div>
+    </section>
+
+    <section id="newPost" class="form-page hidden">
+      <div class="form-card">
+        <h1>Create New Post</h1>
+
+        <label>Category</label>
+        <select id="categoryInput">
+          <option value="class">Class Update</option>
+          <option value="admin">Admin Notice</option>
+          <option value="cover">Cover & Staff Notice</option>
+        </select>
+
+        <label>Title</label>
+        <input id="titleInput" placeholder="Example: Year 7 Science Update" />
+
+        <label>Class / Group</label>
+        <select id="postClassInput">
+          <option>Kindergarten</option>
+          <option>Class 1</option>
+          <option>Class 2</option>
+          <option>Class 3</option>
+          <option>Class 4</option>
+          <option>Class 5</option>
+          <option>Class 6</option>
+          <option>Class 7</option>
+          <option>Class 8</option>
+          <option>Upper School</option>
+          <option>Whole School</option>
+        </select>
+
+        <label>Subject</label>
+        <select id="subjectInput">
+          <option>Computing</option>
+          <option>Maths</option>
+          <option>Science</option>
+          <option>English</option>
+          <option>Art</option>
+          <option>Admin</option>
+        </select>
+
+        <label>Content</label>
+        <textarea id="contentInput" placeholder="Write the update here..."></textarea>
+
+        <div class="checks">
+          <label><input type="checkbox" id="pinnedInput" /> Pin post</label>
+          <label><input type="checkbox" id="urgentInput" /> Mark urgent</label>
+        </div>
+
+        <button onclick="createPost()" class="primary-btn full">Publish Post</button>
+      </div>
+    </section>
+
+    <section id="profile" class="profile-page hidden">
+      <div class="profile-card">
+        <div class="profile-avatar">N</div>
+        <h1>Naveen Kumar</h1>
+        <p>IT Coordinator · Educational Technology Developer</p>
+        <div class="profile-grid">
+          <div><strong>Role</strong><span>Admin / Staff</span></div>
+          <div><strong>Department</strong><span>Digital Technology</span></div>
+          <div><strong>Access</strong><span>School domain validated</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 
   <script src="script.js"></script>
 </body>
