@@ -60,14 +60,36 @@
 
     <section id="dashboard" class="dashboard hidden">
       <div class="stats-grid">
-        <div class="stat-card"><i data-lucide="clipboard-list"></i><div><h2 id="totalPosts">0</h2><p>Total Posts</p></div></div>
-        <div class="stat-card"><i data-lucide="pin"></i><div><h2 id="pinnedPosts">0</h2><p>Pinned</p></div></div>
-        <div class="stat-card urgent"><i data-lucide="triangle-alert"></i><div><h2 id="urgentPosts">0</h2><p>Urgent</p></div></div>
-        <div class="stat-card"><i data-lucide="book-open"></i><div><h2 id="classPosts">0</h2><p>Class Updates</p></div></div>
-        <div class="stat-card"><i data-lucide="bell"></i><div><h2 id="adminPosts">0</h2><p>Admin Notices</p></div></div>
-        <div class="stat-card"><i data-lucide="calendar-days"></i><div><h2 id="coverPosts">0</h2><p>Cover Notices</p></div></div>
-      </div>
+  <div class="stat-card" onclick="filterByStat('all')">
+    <i data-lucide="clipboard-list"></i>
+    <div><h2 id="totalPosts">0</h2><p>Total Posts</p></div>
+  </div>
 
+  <div class="stat-card" onclick="filterByStat('pinned')">
+    <i data-lucide="pin"></i>
+    <div><h2 id="pinnedPosts">0</h2><p>Pinned</p></div>
+  </div>
+
+  <div class="stat-card urgent" onclick="filterByStat('urgent')">
+    <i data-lucide="triangle-alert"></i>
+    <div><h2 id="urgentPosts">0</h2><p>Urgent</p></div>
+  </div>
+
+  <div class="stat-card" onclick="filterByStat('class')">
+    <i data-lucide="book-open"></i>
+    <div><h2 id="classPosts">0</h2><p>Class Updates</p></div>
+  </div>
+
+  <div class="stat-card" onclick="filterByStat('admin')">
+    <i data-lucide="bell"></i>
+    <div><h2 id="adminPosts">0</h2><p>Admin Notices</p></div>
+  </div>
+
+  <div class="stat-card" onclick="filterByStat('cover')">
+    <i data-lucide="calendar-days"></i>
+    <div><h2 id="coverPosts">0</h2><p>Cover Notices</p></div>
+  </div>
+</div>
       <div class="feed-panel">
         <div class="tabs">
           <button class="tab active" onclick="setTab('class')">Class Updates</button>
