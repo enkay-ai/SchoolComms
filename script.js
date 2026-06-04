@@ -1,36 +1,44 @@
 let currentTab = "class";
 let currentUser = null;
+let statFilter = "all";
+let viewedPosts = [];
 
 let posts = [
   {
+    id: 1,
     title: "Welcome to SchoolComms",
     category: "admin",
     classGroup: "Whole School",
     subject: "Admin",
     content: "This platform centralises school announcements, class updates, and staff notices in one digital space.",
     author: "Admin Team",
+    authorEmail: "admin@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
     pinned: true,
     urgent: false
   },
   {
+    id: 2,
     title: "Class 7 Computing Update",
     category: "class",
     classGroup: "Class 7",
     subject: "Computing",
     content: "Students explored cloud computing concepts and discussed how services like storage, identity, and hosting work together.",
     author: "Naveen Kumar",
+    authorEmail: "demo@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
     pinned: false,
     urgent: false
   },
   {
+    id: 3,
     title: "Cover Needed: Upper School",
     category: "cover",
     classGroup: "Upper School",
     subject: "Admin",
     content: "Cover required for Upper School supervision tomorrow morning. Please respond if available.",
     author: "Staff Notice",
+    authorEmail: "staff@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
     pinned: false,
     urgent: true
@@ -58,7 +66,8 @@ function login() {
 
   currentUser = {
     email: email,
-    name: email.split("@")[0]
+    name: email.split("@")[0],
+    role: email.includes("admin") || email.includes("naveen") || email.includes("demo") ? "admin" : "staff"
   };
 
   document.getElementById("landing").classList.add("hidden");
@@ -71,22 +80,68 @@ function login() {
   lucide.createIcons();
 }
 
+function filterByStat(type) {
+  statFilter = type;
+
+  if (["class", "admin", "cover"].includes(type)) {
+    currentTab = type;
+    setActiveTabButton(type);
+  }
+
+  renderPosts();
+}
+
+function markViewed(postId) {
+  viewedPosts.push(postId);
+  renderPosts();
+  updateStats();
+}
+
+function canManage(post) {
+  if (!currentUser) return false;
+  return currentUser.role === "admin" || post.authorEmail === currentUser.email;
+}
+
+function deletePost(postId) {
+  const post = posts.find(p => p.id === postId);
+
+  if (!canManage(post)) {
+    alert("Only the creator or an admin can delete this post.");
+    return;
+  }
+
+  if (confirm("Are you sure you want to delete this post?")) {
+    posts = posts.filter(p => p.id !== postId);
+    renderPosts();
+    updateStats();
+  }
+}
+
+function togglePin(postId) {
+  const post = posts.find(p => p.id === postId);
+
+  if (!canManage(post)) {
+    alert("Only the creator or an admin can pin or unpin this post.");
+    return;
+  }
+
+  post.pinned = !post.pinned;
+  renderPosts();
+  updateStats();
+}
+
 function showView(viewId) {
   document.querySelectorAll("main section").forEach(section => {
     section.classList.add("hidden");
   });
 
   document.getElementById(viewId).classList.remove("hidden");
-
-  document.querySelectorAll(".nav button").forEach(btn => {
-    btn.classList.remove("active");
-  });
-
   lucide.createIcons();
 }
 
 function setTab(tab) {
   currentTab = tab;
+  statFilter = "all";
 
   document.querySelectorAll(".tab").forEach(button => {
     button.classList.remove("active");
@@ -111,12 +166,14 @@ function createPost() {
   }
 
   posts.unshift({
+    id: Date.now(),
     title,
     category,
     classGroup,
     subject,
     content,
     author: currentUser ? currentUser.name : "Demo User",
+    authorEmail: currentUser ? currentUser.email : "demo@greenwichwaldorfschool.com",
     date: new Date().toLocaleString(),
     pinned,
     urgent
@@ -128,6 +185,7 @@ function createPost() {
   document.getElementById("urgentInput").checked = false;
 
   currentTab = category;
+  statFilter = "all";
   showView("dashboard");
   setActiveTabButton(category);
   updateStats();
@@ -156,15 +214,15 @@ function renderPosts() {
   const classFilter = document.getElementById("classFilter")?.value || "";
   const subjectFilter = document.getElementById("subjectFilter")?.value || "";
 
-  let filtered = posts.filter(post => post.category === currentTab);
+  let filtered = posts.filter(post => !viewedPosts.includes(post.id));
 
-  if (classFilter) {
-    filtered = filtered.filter(post => post.classGroup === classFilter);
-  }
+  if (statFilter === "pinned") filtered = filtered.filter(post => post.pinned);
+  else if (statFilter === "urgent") filtered = filtered.filter(post => post.urgent);
+  else if (["class", "admin", "cover"].includes(statFilter)) filtered = filtered.filter(post => post.category === statFilter);
+  else filtered = filtered.filter(post => post.category === currentTab);
 
-  if (subjectFilter) {
-    filtered = filtered.filter(post => post.subject === subjectFilter);
-  }
+  if (classFilter) filtered = filtered.filter(post => post.classGroup === classFilter);
+  if (subjectFilter) filtered = filtered.filter(post => post.subject === subjectFilter);
 
   if (search) {
     filtered = filtered.filter(post =>
@@ -185,8 +243,8 @@ function renderPosts() {
     postList.innerHTML = `
       <div class="empty-state">
         <i data-lucide="inbox"></i>
-        <h3>No posts yet</h3>
-        <p>Create a new post to populate this section.</p>
+        <h3>No posts here</h3>
+        <p>No posts match this filter, or they have already been marked as viewed.</p>
       </div>
     `;
     lucide.createIcons();
@@ -210,6 +268,12 @@ function renderPosts() {
       </div>
 
       <p>${post.content}</p>
+
+      <div class="post-actions">
+        <button class="viewed" onclick="markViewed(${post.id})">Viewed</button>
+        <button onclick="togglePin(${post.id})">${post.pinned ? "Unpin" : "Pin"}</button>
+        <button class="danger" onclick="deletePost(${post.id})">Delete</button>
+      </div>
     </article>
   `).join("");
 
@@ -217,10 +281,12 @@ function renderPosts() {
 }
 
 function updateStats() {
-  document.getElementById("totalPosts").textContent = posts.length;
-  document.getElementById("pinnedPosts").textContent = posts.filter(p => p.pinned).length;
-  document.getElementById("urgentPosts").textContent = posts.filter(p => p.urgent).length;
-  document.getElementById("classPosts").textContent = posts.filter(p => p.category === "class").length;
-  document.getElementById("adminPosts").textContent = posts.filter(p => p.category === "admin").length;
-  document.getElementById("coverPosts").textContent = posts.filter(p => p.category === "cover").length;
+  const visiblePosts = posts.filter(post => !viewedPosts.includes(post.id));
+
+  document.getElementById("totalPosts").textContent = visiblePosts.length;
+  document.getElementById("pinnedPosts").textContent = visiblePosts.filter(p => p.pinned).length;
+  document.getElementById("urgentPosts").textContent = visiblePosts.filter(p => p.urgent).length;
+  document.getElementById("classPosts").textContent = visiblePosts.filter(p => p.category === "class").length;
+  document.getElementById("adminPosts").textContent = visiblePosts.filter(p => p.category === "admin").length;
+  document.getElementById("coverPosts").textContent = visiblePosts.filter(p => p.category === "cover").length;
 }
