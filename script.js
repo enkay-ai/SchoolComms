@@ -306,3 +306,19 @@ function updateStats() {
   document.getElementById("adminPosts").textContent = visiblePosts.filter(p => p.category === "admin").length;
   document.getElementById("coverPosts").textContent = visiblePosts.filter(p => p.category === "cover").length;
 }
+function logout() {
+  currentUser = null;
+  statFilter = "all";
+  currentTab = "class";
+
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("newPost").classList.add("hidden");
+  document.getElementById("profile").classList.add("hidden");
+  document.getElementById("navMenu").classList.add("hidden");
+  document.getElementById("avatar").classList.add("hidden");
+
+  document.getElementById("landing").classList.remove("hidden");
+  document.getElementById("emailInput").value = "";
+
+  lucide.createIcons();
+}
