@@ -2,10 +2,15 @@ let posts = [];
 let coverRequests = [];
 
 function login() {
-    const email = document.getElementById("emailInput").value;
+    const email = document.getElementById("emailInput").value.trim();
 
-    if (email.trim() === "") {
+    if (email === "") {
         alert("Please enter an email address.");
+        return;
+    }
+
+    if (!email.endsWith("@greenwichwaldorfschool.com")) {
+        alert("Access restricted to Greenwich Waldorf School staff emails only.");
         return;
     }
 
