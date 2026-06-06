@@ -1,5 +1,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxrA3h4Xi3tsiFXXUDWbJA06AqprKy9yUp2SyuMTsoehphnB0yq8eufbyOox-Fu4rd23g/exec";
+
 let currentUser = null;
+let loginEmail = "";
 let allPosts = [];
 let currentTab = "class";
 let statFilter = "all";
@@ -35,34 +37,57 @@ async function apiPost(action, payload = {}) {
 async function login() {
   const email = document.getElementById("emailInput").value.trim();
 
+  loginEmail = email;
+
   if (!email.endsWith("@greenwichwaldorfschool.com")) {
     alert("Please use your school email address.");
     return;
   }
 
-  const res = await apiGet("getCurrentUser", { email: email });
+  try {
 
-  if (!res.success) {
-    alert(res.message);
-    return;
+    const res = await apiGet("getCurrentUser", {
+      email: email
+    });
+
+    console.log("Login Response:", res);
+
+    if (!res.success) {
+      alert(res.message);
+      return;
+    }
+
+    currentUser = res.user;
+
+    document.getElementById("landing").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("navMenu").classList.remove("hidden");
+    document.getElementById("avatar").classList.remove("hidden");
+
+    document.getElementById("avatar").innerText =
+      currentUser.initial || "U";
+
+    document.querySelector(".profile-avatar").innerText =
+      currentUser.initial || "U";
+
+    document.querySelector(".profile-card h1").innerText =
+      currentUser.name || "User";
+
+    document.querySelector(".profile-card p").innerText =
+      `${currentUser.role} · ${currentUser.department}`;
+
+    await loadDropdowns();
+    await loadStats();
+    await loadPosts();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Login failed. Open F12 → Console and send me the error."
+    );
   }
-
-  currentUser = res.user;
-
-  document.getElementById("landing").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("navMenu").classList.remove("hidden");
-  document.getElementById("avatar").classList.remove("hidden");
-  document.getElementById("avatar").innerText = currentUser.initial;
-
-  document.querySelector(".profile-avatar").innerText = currentUser.initial;
-  document.querySelector(".profile-card h1").innerText = currentUser.name;
-  document.querySelector(".profile-card p").innerText =
-    currentUser.role + " · " + currentUser.department;
-
-  await loadDropdowns();
-  await loadStats();
-  await loadPosts();
 }
 
 function logout() {
