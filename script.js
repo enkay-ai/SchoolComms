@@ -1,7 +1,6 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxrA3h4Xi3tsiFXXUDWbJA06AqprKy9yUp2SyuMTsoehphnB0yq8eufbyOox-Fu4rd23g/exec";
+const API_URL = "https://script.google.com/a/macros/greenwichwaldorfschool.com/s/AKfycbxrA3h4Xi3tsiFXXUDWbJA06AqprKy9yUp2SyuMTsoehphnB0yq8eufbyOox-Fu4rd23g/exec";
 
 let currentUser = null;
-let loginEmail = "";
 let allPosts = [];
 let currentTab = "class";
 let statFilter = "all";
@@ -37,57 +36,34 @@ async function apiPost(action, payload = {}) {
 async function login() {
   const email = document.getElementById("emailInput").value.trim();
 
-  loginEmail = email;
-
   if (!email.endsWith("@greenwichwaldorfschool.com")) {
     alert("Please use your school email address.");
     return;
   }
 
-  try {
+  const res = await apiGet("getCurrentUser");
 
-    const res = await apiGet("getCurrentUser", {
-      email: email
-    });
-
-    console.log("Login Response:", res);
-
-    if (!res.success) {
-      alert(res.message);
-      return;
-    }
-
-    currentUser = res.user;
-
-    document.getElementById("landing").classList.add("hidden");
-    document.getElementById("dashboard").classList.remove("hidden");
-    document.getElementById("navMenu").classList.remove("hidden");
-    document.getElementById("avatar").classList.remove("hidden");
-
-    document.getElementById("avatar").innerText =
-      currentUser.initial || "U";
-
-    document.querySelector(".profile-avatar").innerText =
-      currentUser.initial || "U";
-
-    document.querySelector(".profile-card h1").innerText =
-      currentUser.name || "User";
-
-    document.querySelector(".profile-card p").innerText =
-      `${currentUser.role} · ${currentUser.department}`;
-
-    await loadDropdowns();
-    await loadStats();
-    await loadPosts();
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Login failed. Open F12 → Console and send me the error."
-    );
+  if (!res.success) {
+    alert(res.message);
+    return;
   }
+
+  currentUser = res.user;
+
+  document.getElementById("landing").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("navMenu").classList.remove("hidden");
+  document.getElementById("avatar").classList.remove("hidden");
+  document.getElementById("avatar").innerText = currentUser.initial;
+
+  document.querySelector(".profile-avatar").innerText = currentUser.initial;
+  document.querySelector(".profile-card h1").innerText = currentUser.name;
+  document.querySelector(".profile-card p").innerText =
+    currentUser.role + " · " + currentUser.department;
+
+  await loadDropdowns();
+  await loadStats();
+  await loadPosts();
 }
 
 function logout() {
@@ -127,87 +103,38 @@ async function loadDropdowns() {
   fillSelect("subjectInput", res.subjects, "General", "General");
 }
 
-async function loadDropdowns() {
+function fillSelect(id, values, firstText, firstValue) {
+  const select = document.getElementById(id);
+  select.innerHTML = "";
 
-  const res = await apiGet("getDropdowns", {
-    email: loginEmail
+  const first = document.createElement("option");
+  first.textContent = firstText;
+  first.value = firstValue;
+  select.appendChild(first);
+
+  values.forEach(value => {
+    const option = document.createElement("option");
+    option.textContent = value;
+    option.value = value;
+    select.appendChild(option);
   });
-
-  console.log("Dropdown Response:", res);
-
-  if (!res.success) {
-    alert(res.message);
-    return;
-  }
-
-  fillSelect(
-    "classFilter",
-    res.classes,
-    "All classes",
-    ""
-  );
-
-  fillSelect(
-    "postClassInput",
-    res.classes,
-    "Whole School",
-    "Whole School"
-  );
-
-  fillSelect(
-    "subjectFilter",
-    res.subjects,
-    "All subjects",
-    ""
-  );
-
-  fillSelect(
-    "subjectInput",
-    res.subjects,
-    "General",
-    "General"
-  );
 }
 
 async function loadStats() {
+  const res = await apiGet("getStats");
 
-  const res = await apiGet("getStats", {
-    email: loginEmail
-  });
+  if (!res.success) return;
 
-  console.log("Stats Response:", res);
-
-  if (!res.success) {
-    alert(res.message);
-    return;
-  }
-
-  document.getElementById("totalPosts").innerText =
-    res.totalPosts || 0;
-
-  document.getElementById("pinnedPosts").innerText =
-    res.pinned || 0;
-
-  document.getElementById("urgentPosts").innerText =
-    res.urgent || 0;
-
-  document.getElementById("classPosts").innerText =
-    res.classUpdates || 0;
-
-  document.getElementById("adminPosts").innerText =
-    res.adminNotices || 0;
-
-  document.getElementById("coverPosts").innerText =
-    res.coverNotices || 0;
+  document.getElementById("totalPosts").innerText = res.totalPosts || 0;
+  document.getElementById("pinnedPosts").innerText = res.pinned || 0;
+  document.getElementById("urgentPosts").innerText = res.urgent || 0;
+  document.getElementById("classPosts").innerText = res.classUpdates || 0;
+  document.getElementById("adminPosts").innerText = res.adminNotices || 0;
+  document.getElementById("coverPosts").innerText = res.coverNotices || 0;
 }
 
 async function loadPosts() {
-
-  const res = await apiGet("getPosts", {
-    email: loginEmail
-  });
-
-  console.log("Posts Response:", res);
+  const res = await apiGet("getPosts");
 
   if (!res.success) {
     alert(res.message);
@@ -215,7 +142,6 @@ async function loadPosts() {
   }
 
   allPosts = res.posts || [];
-
   renderPosts();
 }
 
