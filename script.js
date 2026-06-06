@@ -127,38 +127,87 @@ async function loadDropdowns() {
   fillSelect("subjectInput", res.subjects, "General", "General");
 }
 
-function fillSelect(id, values, firstText, firstValue) {
-  const select = document.getElementById(id);
-  select.innerHTML = "";
+async function loadDropdowns() {
 
-  const first = document.createElement("option");
-  first.textContent = firstText;
-  first.value = firstValue;
-  select.appendChild(first);
-
-  values.forEach(value => {
-    const option = document.createElement("option");
-    option.textContent = value;
-    option.value = value;
-    select.appendChild(option);
+  const res = await apiGet("getDropdowns", {
+    email: loginEmail
   });
+
+  console.log("Dropdown Response:", res);
+
+  if (!res.success) {
+    alert(res.message);
+    return;
+  }
+
+  fillSelect(
+    "classFilter",
+    res.classes,
+    "All classes",
+    ""
+  );
+
+  fillSelect(
+    "postClassInput",
+    res.classes,
+    "Whole School",
+    "Whole School"
+  );
+
+  fillSelect(
+    "subjectFilter",
+    res.subjects,
+    "All subjects",
+    ""
+  );
+
+  fillSelect(
+    "subjectInput",
+    res.subjects,
+    "General",
+    "General"
+  );
 }
 
 async function loadStats() {
-  const res = await apiGet("getStats");
 
-  if (!res.success) return;
+  const res = await apiGet("getStats", {
+    email: loginEmail
+  });
 
-  document.getElementById("totalPosts").innerText = res.totalPosts || 0;
-  document.getElementById("pinnedPosts").innerText = res.pinned || 0;
-  document.getElementById("urgentPosts").innerText = res.urgent || 0;
-  document.getElementById("classPosts").innerText = res.classUpdates || 0;
-  document.getElementById("adminPosts").innerText = res.adminNotices || 0;
-  document.getElementById("coverPosts").innerText = res.coverNotices || 0;
+  console.log("Stats Response:", res);
+
+  if (!res.success) {
+    alert(res.message);
+    return;
+  }
+
+  document.getElementById("totalPosts").innerText =
+    res.totalPosts || 0;
+
+  document.getElementById("pinnedPosts").innerText =
+    res.pinned || 0;
+
+  document.getElementById("urgentPosts").innerText =
+    res.urgent || 0;
+
+  document.getElementById("classPosts").innerText =
+    res.classUpdates || 0;
+
+  document.getElementById("adminPosts").innerText =
+    res.adminNotices || 0;
+
+  document.getElementById("coverPosts").innerText =
+    res.coverNotices || 0;
 }
 
 async function loadPosts() {
-  const res = await apiGet("getPosts");
+
+  const res = await apiGet("getPosts", {
+    email: loginEmail
+  });
+
+  console.log("Posts Response:", res);
 
   if (!res.success) {
     alert(res.message);
@@ -166,6 +215,7 @@ async function loadPosts() {
   }
 
   allPosts = res.posts || [];
+
   renderPosts();
 }
 
