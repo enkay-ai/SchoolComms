@@ -3,22 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SchoolComms</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <title>SchoolComms | School Communication Platform</title>
+
+  <link rel="stylesheet" href="style.css?v=10" />
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
 
   <header class="topbar">
     <div class="brand">
-      <div class="brand-icon"><i data-lucide="graduation-cap"></i></div>
-      <h2>SchoolComms</h2>
+      <div class="brand-icon">
+        <i data-lucide="graduation-cap"></i>
+      </div>
+      <div>
+        <h2>SchoolComms</h2>
+        <span>Internal Staff Communication Platform</span>
+      </div>
     </div>
 
     <nav id="navMenu" class="nav hidden">
-      <button onclick="showView('dashboard')" class="nav-btn active"><i data-lucide="layout-dashboard"></i> Dashboard</button>
-      <button onclick="showView('newPost')"><i data-lucide="plus-circle"></i> New Post</button>
-      <button onclick="showView('profile')"><i data-lucide="user-round"></i> My Profile</button>
+      <button onclick="showView('dashboard')" class="nav-btn active">
+        <i data-lucide="layout-dashboard"></i> Dashboard
+      </button>
+
+      <button onclick="showView('newPost')">
+        <i data-lucide="plus-circle"></i> New Post
+      </button>
+
+      <button onclick="showView('profile')">
+        <i data-lucide="user-round"></i> My Profile
+      </button>
+
+      <button onclick="logout()">
+        <i data-lucide="log-out"></i> Logout
+      </button>
     </nav>
 
     <div id="avatar" class="avatar hidden">N</div>
@@ -26,57 +46,141 @@
 
   <main>
 
+    <!-- LANDING / LOGIN -->
     <section id="landing" class="landing">
-      <div class="hero-icon"><i data-lucide="graduation-cap"></i></div>
-      <h1>The staff communication hub<br>your school deserves</h1>
-      <p>Class updates, admin notices, and cover arrangements — all in one professional platform designed for busy school staff.</p>
+      <div class="hero-icon">
+        <i data-lucide="graduation-cap"></i>
+      </div>
+
+      <h1>The staff communication hub<br />your school deserves</h1>
+
+      <p>
+        Class updates, admin notices, cover requests, and staff communication —
+        all in one organised digital platform.
+      </p>
 
       <div class="signin-card">
-        <input id="emailInput" type="email" placeholder="Enter school email address" />
-        <button onclick="login()">Sign in to continue</button>
-        <small>Demo domain restriction: @greenwichwaldorfschool.com</small>
+        <input
+          id="emailInput"
+          type="email"
+          placeholder="Enter your school email address"
+        />
+
+        <button onclick="login()">
+          Sign in with School Email
+        </button>
+
+        <small>
+          Access is restricted to authorised school users.
+        </small>
       </div>
 
       <div class="feature-grid">
         <div class="feature-card">
           <i data-lucide="book-open"></i>
           <h3>Class Updates</h3>
-          <p>Teachers post classroom updates, homework, reminders, and resources.</p>
+          <p>
+            Teachers can share classroom updates, homework reminders,
+            learning activities, and resources.
+          </p>
         </div>
 
         <div class="feature-card">
           <i data-lucide="bell"></i>
           <h3>Admin Noticeboard</h3>
-          <p>School-wide announcements from leadership, pinned for visibility.</p>
+          <p>
+            Leadership and admin teams can publish important notices,
+            deadlines, and school-wide updates.
+          </p>
         </div>
 
         <div class="feature-card">
           <i data-lucide="users-round"></i>
           <h3>Cover & Staff Notices</h3>
-          <p>Cover arrangements and staff communication in one organised feed.</p>
+          <p>
+            Staff can post cover requests, supervision needs, and operational
+            updates in one shared space.
+          </p>
         </div>
       </div>
     </section>
 
+    <!-- DASHBOARD -->
     <section id="dashboard" class="dashboard hidden">
+
       <div class="stats-grid">
-        <div class="stat-card"><i data-lucide="clipboard-list"></i><div><h2 id="totalPosts">0</h2><p>Total Posts</p></div></div>
-        <div class="stat-card"><i data-lucide="pin"></i><div><h2 id="pinnedPosts">0</h2><p>Pinned</p></div></div>
-        <div class="stat-card urgent"><i data-lucide="triangle-alert"></i><div><h2 id="urgentPosts">0</h2><p>Urgent</p></div></div>
-        <div class="stat-card"><i data-lucide="book-open"></i><div><h2 id="classPosts">0</h2><p>Class Updates</p></div></div>
-        <div class="stat-card"><i data-lucide="bell"></i><div><h2 id="adminPosts">0</h2><p>Admin Notices</p></div></div>
-        <div class="stat-card"><i data-lucide="calendar-days"></i><div><h2 id="coverPosts">0</h2><p>Cover Notices</p></div></div>
+        <div class="stat-card" onclick="filterByStat('all')">
+          <i data-lucide="clipboard-list"></i>
+          <div>
+            <h2 id="totalPosts">0</h2>
+            <p>Total Posts</p>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="filterByStat('pinned')">
+          <i data-lucide="pin"></i>
+          <div>
+            <h2 id="pinnedPosts">0</h2>
+            <p>Pinned by You</p>
+          </div>
+        </div>
+
+        <div class="stat-card urgent" onclick="filterByStat('urgent')">
+          <i data-lucide="triangle-alert"></i>
+          <div>
+            <h2 id="urgentPosts">0</h2>
+            <p>Urgent Notices</p>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="filterByStat('class')">
+          <i data-lucide="book-open"></i>
+          <div>
+            <h2 id="classPosts">0</h2>
+            <p>Class Updates</p>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="filterByStat('admin')">
+          <i data-lucide="bell"></i>
+          <div>
+            <h2 id="adminPosts">0</h2>
+            <p>Admin Notices</p>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="filterByStat('cover')">
+          <i data-lucide="calendar-days"></i>
+          <div>
+            <h2 id="coverPosts">0</h2>
+            <p>Cover Notices</p>
+          </div>
+        </div>
       </div>
 
       <div class="feed-panel">
+
         <div class="tabs">
-          <button class="tab active" onclick="setTab('class')">Class Updates</button>
-          <button class="tab" onclick="setTab('admin')">Admin Noticeboard</button>
-          <button class="tab" onclick="setTab('cover')">Cover & Staff Notices</button>
+          <button class="tab active" onclick="setTab('class')">
+            Class Updates
+          </button>
+
+          <button class="tab" onclick="setTab('admin')">
+            Admin Noticeboard
+          </button>
+
+          <button class="tab" onclick="setTab('cover')">
+            Cover & Staff Notices
+          </button>
         </div>
 
         <div class="filters">
-          <input id="searchInput" oninput="renderPosts()" placeholder="Search posts..." />
+          <input
+            id="searchInput"
+            oninput="renderPosts()"
+            placeholder="Search posts..."
+          />
+
           <select id="classFilter" onchange="renderPosts()">
             <option value="">All classes</option>
             <option>Kindergarten</option>
@@ -89,6 +193,7 @@
             <option>Class 7</option>
             <option>Class 8</option>
             <option>Upper School</option>
+            <option>Whole School</option>
           </select>
 
           <select id="subjectFilter" onchange="renderPosts()">
@@ -101,16 +206,23 @@
             <option>Admin</option>
           </select>
 
-          <button onclick="showView('newPost')" class="primary-btn"><i data-lucide="plus-circle"></i> New Post</button>
+          <button onclick="showView('newPost')" class="primary-btn">
+            <i data-lucide="plus-circle"></i> New Post
+          </button>
         </div>
 
         <div id="postList" class="post-list"></div>
+
       </div>
     </section>
 
+    <!-- NEW POST -->
     <section id="newPost" class="form-page hidden">
       <div class="form-card">
         <h1>Create New Post</h1>
+        <p class="form-intro">
+          Publish a class update, admin notice, or staff cover communication.
+        </p>
 
         <label>Category</label>
         <select id="categoryInput">
@@ -120,7 +232,10 @@
         </select>
 
         <label>Title</label>
-        <input id="titleInput" placeholder="Example: Year 7 Science Update" />
+        <input
+          id="titleInput"
+          placeholder="Example: Class 7 Computing Update"
+        />
 
         <label>Class / Group</label>
         <select id="postClassInput">
@@ -137,7 +252,7 @@
           <option>Whole School</option>
         </select>
 
-        <label>Subject</label>
+        <label>Subject / Area</label>
         <select id="subjectInput">
           <option>Computing</option>
           <option>Maths</option>
@@ -148,32 +263,57 @@
         </select>
 
         <label>Content</label>
-        <textarea id="contentInput" placeholder="Write the update here..."></textarea>
+        <textarea
+          id="contentInput"
+          placeholder="Write the full update here..."
+        ></textarea>
 
         <div class="checks">
-          <label><input type="checkbox" id="pinnedInput" /> Pin post</label>
-          <label><input type="checkbox" id="urgentInput" /> Mark urgent</label>
+          <label>
+            <input type="checkbox" id="urgentInput" />
+            Mark as urgent
+          </label>
         </div>
 
-        <button onclick="createPost()" class="primary-btn full">Publish Post</button>
+        <button onclick="createPost()" class="primary-btn full">
+          Publish Post
+        </button>
       </div>
     </section>
 
+    <!-- PROFILE -->
     <section id="profile" class="profile-page hidden">
       <div class="profile-card">
         <div class="profile-avatar">N</div>
-        <h1>Naveen Kumar</h1>
-        <p>IT Coordinator · Educational Technology Developer</p>
+
+        <h1>Staff Profile</h1>
+
+        <p>
+          Signed in user details are authenticated through the school user list
+          in the connected database.
+        </p>
+
         <div class="profile-grid">
-          <div><strong>Role</strong><span>Admin / Staff</span></div>
-          <div><strong>Department</strong><span>Digital Technology</span></div>
-          <div><strong>Access</strong><span>School domain validated</span></div>
+          <div>
+            <strong>Role</strong>
+            <span>Admin / Staff</span>
+          </div>
+
+          <div>
+            <strong>Department</strong>
+            <span>School Operations</span>
+          </div>
+
+          <div>
+            <strong>Access</strong>
+            <span>School email validated</span>
+          </div>
         </div>
       </div>
     </section>
 
   </main>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=10"></script>
 </body>
 </html>
