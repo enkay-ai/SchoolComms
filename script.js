@@ -1,4 +1,4 @@
-const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const API_URL = "https://script.google.com/macros/s/AKfycbxCwZP42LymO57XP6-Z33Ckkc7EgpoaHk1lmobcJhF7PBpd9aWratzw3ENpnEsxU981/exec";
 
 let currentTab = "class";
 let currentUser = null;
