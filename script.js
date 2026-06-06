@@ -1,98 +1,156 @@
-let currentTab = "class";
+const API_URL = "https://script.google.com/a/macros/greenwichwaldorfschool.com/s/AKfycbxrA3h4Xi3tsiFXXUDWbJA06AqprKy9yUp2SyuMTsoehphnB0yq8eufbyOox-Fu4rd23g/exec";
+
 let currentUser = null;
+let allPosts = [];
+let currentTab = "class";
 let statFilter = "all";
-let viewedPosts = [];
-let userPinnedPosts = [];
 
-let posts = [
-  {
-    id: 1,
-    title: "Welcome to SchoolComms",
-    category: "admin",
-    classGroup: "Whole School",
-    subject: "Admin",
-    content: "This platform centralises school announcements, class updates, and staff notices in one digital space.",
-    author: "Admin Team",
-    authorEmail: "admin@greenwichwaldorfschool.com",
-    date: new Date().toLocaleString(),
-    urgent: false
-  },
-  {
-    id: 2,
-    title: "Class 7 Computing Update",
-    category: "class",
-    classGroup: "Class 7",
-    subject: "Computing",
-    content: "Students explored cloud computing concepts and discussed how services like storage, identity, and hosting work together.",
-    author: "Naveen Kumar",
-    authorEmail: "demo@greenwichwaldorfschool.com",
-    date: new Date().toLocaleString(),
-    urgent: false
-  },
-  {
-    id: 3,
-    title: "Cover Needed: Upper School",
-    category: "cover",
-    classGroup: "Upper School",
-    subject: "Admin",
-    content: "Cover required for Upper School supervision tomorrow morning. Please respond if available.",
-    author: "Staff Notice",
-    authorEmail: "staff@greenwichwaldorfschool.com",
-    date: new Date().toLocaleString(),
-    urgent: true
-  }
-];
-
-document.addEventListener("DOMContentLoaded", function () {
+window.onload = function () {
   lucide.createIcons();
-  updateStats();
-  renderPosts();
-});
+};
 
-function login() {
-  const email = document.getElementById("emailInput").value.trim().toLowerCase();
+async function apiGet(action, params = {}) {
+  const url = new URL(API_URL);
+  url.searchParams.set("action", action);
 
-  if (!email) {
-    alert("Please enter your school email address.");
-    return;
-  }
+  Object.keys(params).forEach(key => {
+    if (params[key]) url.searchParams.set(key, params[key]);
+  });
+
+  const res = await fetch(url.toString());
+  return await res.json();
+}
+
+async function apiPost(action, payload = {}) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: action,
+      ...payload
+    })
+  });
+
+  return await res.json();
+}
+
+async function login() {
+  const email = document.getElementById("emailInput").value.trim();
 
   if (!email.endsWith("@greenwichwaldorfschool.com")) {
-    alert("Access restricted to Greenwich Waldorf School staff email addresses only.");
+    alert("Please use your school email address.");
     return;
   }
 
-  currentUser = {
-    email: email,
-    name: email.split("@")[0],
-    role: email.includes("admin") || email.includes("naveen") || email.includes("demo") ? "admin" : "staff"
-  };
+  const res = await apiGet("getCurrentUser");
+
+  if (!res.success) {
+    alert(res.message);
+    return;
+  }
+
+  currentUser = res.user;
 
   document.getElementById("landing").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("navMenu").classList.remove("hidden");
   document.getElementById("avatar").classList.remove("hidden");
+  document.getElementById("avatar").innerText = currentUser.initial;
 
-  updateStats();
-  renderPosts();
+  document.querySelector(".profile-avatar").innerText = currentUser.initial;
+  document.querySelector(".profile-card h1").innerText = currentUser.name;
+  document.querySelector(".profile-card p").innerText =
+    currentUser.role + " · " + currentUser.department;
+
+  await loadDropdowns();
+  await loadStats();
+  await loadPosts();
+}
+
+function logout() {
+  currentUser = null;
+
+  document.getElementById("landing").classList.remove("hidden");
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("newPost").classList.add("hidden");
+  document.getElementById("profile").classList.add("hidden");
+  document.getElementById("navMenu").classList.add("hidden");
+  document.getElementById("avatar").classList.add("hidden");
+}
+
+function showView(view) {
+  ["landing", "dashboard", "newPost", "profile"].forEach(id => {
+    document.getElementById(id).classList.add("hidden");
+  });
+
+  document.getElementById(view).classList.remove("hidden");
+
+  document.querySelectorAll(".nav button").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
   lucide.createIcons();
 }
 
-function showView(viewId) {
-  document.querySelectorAll("main section").forEach(section => {
-    section.classList.add("hidden");
-  });
+async function loadDropdowns() {
+  const res = await apiGet("getDropdowns");
 
-  document.getElementById(viewId).classList.remove("hidden");
-  lucide.createIcons();
+  if (!res.success) return;
+
+  fillSelect("classFilter", res.classes, "All classes", "");
+  fillSelect("postClassInput", res.classes, "Whole School", "Whole School");
+
+  fillSelect("subjectFilter", res.subjects, "All subjects", "");
+  fillSelect("subjectInput", res.subjects, "General", "General");
+}
+
+function fillSelect(id, values, firstText, firstValue) {
+  const select = document.getElementById(id);
+  select.innerHTML = "";
+
+  const first = document.createElement("option");
+  first.textContent = firstText;
+  first.value = firstValue;
+  select.appendChild(first);
+
+  values.forEach(value => {
+    const option = document.createElement("option");
+    option.textContent = value;
+    option.value = value;
+    select.appendChild(option);
+  });
+}
+
+async function loadStats() {
+  const res = await apiGet("getStats");
+
+  if (!res.success) return;
+
+  document.getElementById("totalPosts").innerText = res.totalPosts || 0;
+  document.getElementById("pinnedPosts").innerText = res.pinned || 0;
+  document.getElementById("urgentPosts").innerText = res.urgent || 0;
+  document.getElementById("classPosts").innerText = res.classUpdates || 0;
+  document.getElementById("adminPosts").innerText = res.adminNotices || 0;
+  document.getElementById("coverPosts").innerText = res.coverNotices || 0;
+}
+
+async function loadPosts() {
+  const res = await apiGet("getPosts");
+
+  if (!res.success) {
+    alert(res.message);
+    return;
+  }
+
+  allPosts = res.posts || [];
+  renderPosts();
 }
 
 function setTab(tab) {
   currentTab = tab;
   statFilter = "all";
 
-  document.querySelectorAll(".tab").forEach(button => {
-    button.classList.remove("active");
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.classList.remove("active");
   });
 
   event.target.classList.add("active");
@@ -101,224 +159,177 @@ function setTab(tab) {
 
 function filterByStat(type) {
   statFilter = type;
-
-  if (["class", "admin", "cover"].includes(type)) {
-    currentTab = type;
-    setActiveTabButton(type);
-  }
-
   renderPosts();
 }
 
-function createPost() {
+function renderPosts() {
+  const list = document.getElementById("postList");
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const classFilter = document.getElementById("classFilter").value;
+  const subjectFilter = document.getElementById("subjectFilter").value;
+
+  let posts = [...allPosts];
+
+  if (currentTab === "class") {
+    posts = posts.filter(p => p.PostType === "Class Update");
+  }
+
+  if (currentTab === "admin") {
+    posts = posts.filter(p => p.PostType === "Admin Notice");
+  }
+
+  if (currentTab === "cover") {
+    posts = posts.filter(p =>
+      p.PostType === "Cover Notice" || p.PostType === "Staff Notice"
+    );
+  }
+
+  if (statFilter === "pinned") posts = posts.filter(p => p.IsPinned === "TRUE");
+  if (statFilter === "urgent") posts = posts.filter(p => p.Priority === "Urgent");
+  if (statFilter === "class") posts = posts.filter(p => p.PostType === "Class Update");
+  if (statFilter === "admin") posts = posts.filter(p => p.PostType === "Admin Notice");
+  if (statFilter === "cover") posts = posts.filter(p => p.PostType === "Cover Notice");
+
+  if (classFilter) posts = posts.filter(p => p.ClassName === classFilter);
+  if (subjectFilter) posts = posts.filter(p => p.SubjectName === subjectFilter);
+
+  if (search) {
+    posts = posts.filter(p =>
+      String(p.Title).toLowerCase().includes(search) ||
+      String(p.Content).toLowerCase().includes(search) ||
+      String(p.AuthorName).toLowerCase().includes(search)
+    );
+  }
+
+  if (!posts.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <h3>No posts found</h3>
+        <p>Create a new post or change your filters.</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = posts.map(post => `
+    <div class="post-card">
+      <div class="post-header">
+        <div>
+          <h3>${post.IsPinned === "TRUE" ? "📌 " : ""}${escapeHtml(post.Title)}</h3>
+          <p>${escapeHtml(post.AuthorName)} · ${formatDate(post.Timestamp)}</p>
+        </div>
+      </div>
+
+      <div class="post-tags">
+        <span>${escapeHtml(post.PostType)}</span>
+        <span>${escapeHtml(post.ClassName || "Whole School")}</span>
+        <span>${escapeHtml(post.SubjectName || "General")}</span>
+        <span class="${post.Priority === "Urgent" ? "urgent-tag" : ""}">
+          ${escapeHtml(post.Priority || "Normal")}
+        </span>
+      </div>
+
+      <p class="post-content">${escapeHtml(post.Content)}</p>
+
+      <div class="post-actions">
+        <button onclick="togglePin('${post.PostID}')">Pin / Unpin</button>
+        <button onclick="deletePost('${post.PostID}')">Delete</button>
+      </div>
+    </div>
+  `).join("");
+
+  lucide.createIcons();
+}
+
+async function createPost() {
   const category = document.getElementById("categoryInput").value;
+
+  const postTypeMap = {
+    class: "Class Update",
+    admin: "Admin Notice",
+    cover: "Cover Notice"
+  };
+
   const title = document.getElementById("titleInput").value.trim();
-  const classGroup = document.getElementById("postClassInput").value;
-  const subject = document.getElementById("subjectInput").value;
   const content = document.getElementById("contentInput").value.trim();
-  const urgent = document.getElementById("urgentInput").checked;
 
   if (!title || !content) {
     alert("Please add a title and content.");
     return;
   }
 
-  posts.unshift({
-    id: Date.now(),
-    title,
-    category,
-    classGroup,
-    subject,
-    content,
-    author: currentUser ? currentUser.name : "Demo User",
-    authorEmail: currentUser ? currentUser.email : "demo@greenwichwaldorfschool.com",
-    date: new Date().toLocaleString(),
-    urgent
+  const postData = {
+    postType: postTypeMap[category],
+    title: title,
+    content: content,
+    className: document.getElementById("postClassInput").value,
+    subjectName: document.getElementById("subjectInput").value,
+    priority: document.getElementById("urgentInput").checked ? "Urgent" : "Normal",
+    visibility: "Staff Only",
+    imageUrl: ""
+  };
+
+  const res = await apiPost("createPost", {
+    data: postData
   });
+
+  if (!res.success) {
+    alert(res.message);
+    return;
+  }
+
+  if (document.getElementById("pinnedInput").checked && res.postId) {
+    await apiPost("togglePinPost", {
+      postId: res.postId
+    });
+  }
+
+  alert("Post published successfully.");
 
   document.getElementById("titleInput").value = "";
   document.getElementById("contentInput").value = "";
+  document.getElementById("pinnedInput").checked = false;
   document.getElementById("urgentInput").checked = false;
 
-  currentTab = category;
-  statFilter = "all";
   showView("dashboard");
-  setActiveTabButton(category);
-  updateStats();
-  renderPosts();
+  await loadStats();
+  await loadPosts();
 }
 
-function markViewed(postId) {
-  if (!viewedPosts.includes(postId)) {
-    viewedPosts.push(postId);
-  }
-
-  renderPosts();
-  updateStats();
-}
-
-function togglePin(postId) {
-  if (userPinnedPosts.includes(postId)) {
-    userPinnedPosts = userPinnedPosts.filter(id => id !== postId);
-  } else {
-    userPinnedPosts.push(postId);
-  }
-
-  renderPosts();
-  updateStats();
-}
-
-function canDelete(post) {
-  if (!currentUser || !post) return false;
-  return currentUser.role === "admin" || post.authorEmail === currentUser.email;
-}
-
-function deletePost(postId) {
-  const post = posts.find(p => p.id === postId);
-
-  if (!canDelete(post)) {
-    alert("Only the creator of the post or an admin can delete this post.");
-    return;
-  }
-
-  if (confirm("Are you sure you want to delete this post?")) {
-    posts = posts.filter(p => p.id !== postId);
-    viewedPosts = viewedPosts.filter(id => id !== postId);
-    userPinnedPosts = userPinnedPosts.filter(id => id !== postId);
-
-    renderPosts();
-    updateStats();
-  }
-}
-
-function setActiveTabButton(category) {
-  document.querySelectorAll(".tab").forEach(button => {
-    button.classList.remove("active");
-
-    if (
-      (category === "class" && button.textContent.includes("Class")) ||
-      (category === "admin" && button.textContent.includes("Admin")) ||
-      (category === "cover" && button.textContent.includes("Cover"))
-    ) {
-      button.classList.add("active");
-    }
-  });
-}
-
-function renderPosts() {
-  const postList = document.getElementById("postList");
-  if (!postList) return;
-
-  const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
-  const classFilter = document.getElementById("classFilter")?.value || "";
-  const subjectFilter = document.getElementById("subjectFilter")?.value || "";
-
-  let filtered = posts.filter(post => !viewedPosts.includes(post.id));
-
-  if (statFilter === "pinned") {
-    filtered = filtered.filter(post => userPinnedPosts.includes(post.id));
-  } else if (statFilter === "urgent") {
-    filtered = filtered.filter(post => post.urgent);
-  } else if (["class", "admin", "cover"].includes(statFilter)) {
-    filtered = filtered.filter(post => post.category === statFilter);
-  } else {
-    filtered = filtered.filter(post => post.category === currentTab);
-  }
-
-  if (classFilter) {
-    filtered = filtered.filter(post => post.classGroup === classFilter);
-  }
-
-  if (subjectFilter) {
-    filtered = filtered.filter(post => post.subject === subjectFilter);
-  }
-
-  if (search) {
-    filtered = filtered.filter(post =>
-      post.title.toLowerCase().includes(search) ||
-      post.content.toLowerCase().includes(search) ||
-      post.classGroup.toLowerCase().includes(search) ||
-      post.subject.toLowerCase().includes(search)
-    );
-  }
-
-  filtered.sort((a, b) => {
-    const aPinned = userPinnedPosts.includes(a.id);
-    const bPinned = userPinnedPosts.includes(b.id);
-
-    if (aPinned && !bPinned) return -1;
-    if (!aPinned && bPinned) return 1;
-    return b.id - a.id;
+async function togglePin(postId) {
+  const res = await apiPost("togglePinPost", {
+    postId: postId
   });
 
-  if (filtered.length === 0) {
-    postList.innerHTML = `
-      <div class="empty-state">
-        <i data-lucide="inbox"></i>
-        <h3>No posts here</h3>
-        <p>No posts match this filter, or they have already been marked as viewed.</p>
-      </div>
-    `;
-    lucide.createIcons();
-    return;
-  }
-
-  postList.innerHTML = filtered.map(post => `
-    <article class="post-card">
-      <div class="post-top">
-        <div>
-          <h3>${post.title}</h3>
-          <div class="meta">${post.author} · ${post.date}</div>
-        </div>
-
-        <div class="badges">
-          <span>${post.classGroup}</span>
-          <span>${post.subject}</span>
-          ${userPinnedPosts.includes(post.id) ? `<span class="pinned-badge">Pinned by you</span>` : ""}
-          ${post.urgent ? `<span class="urgent-badge">Urgent</span>` : ""}
-        </div>
-      </div>
-
-      <p>${post.content}</p>
-
-      <div class="post-actions">
-        <button class="viewed" onclick="markViewed(${post.id})">Viewed</button>
-
-        <button onclick="togglePin(${post.id})">
-          ${userPinnedPosts.includes(post.id) ? "Unpin for me" : "Pin for me"}
-        </button>
-
-        ${canDelete(post) ? `<button class="danger" onclick="deletePost(${post.id})">Delete</button>` : ""}
-      </div>
-    </article>
-  `).join("");
-
-  lucide.createIcons();
+  alert(res.message);
+  await loadStats();
+  await loadPosts();
 }
 
-function updateStats() {
-  const visiblePosts = posts.filter(post => !viewedPosts.includes(post.id));
+async function deletePost(postId) {
+  if (!confirm("Are you sure you want to delete this post?")) return;
 
-  document.getElementById("totalPosts").textContent = visiblePosts.length;
-  document.getElementById("pinnedPosts").textContent = visiblePosts.filter(p => userPinnedPosts.includes(p.id)).length;
-  document.getElementById("urgentPosts").textContent = visiblePosts.filter(p => p.urgent).length;
-  document.getElementById("classPosts").textContent = visiblePosts.filter(p => p.category === "class").length;
-  document.getElementById("adminPosts").textContent = visiblePosts.filter(p => p.category === "admin").length;
-  document.getElementById("coverPosts").textContent = visiblePosts.filter(p => p.category === "cover").length;
+  const res = await apiPost("deletePost", {
+    postId: postId
+  });
+
+  alert(res.message);
+  await loadStats();
+  await loadPosts();
 }
-function logout() {
-  currentUser = null;
-  statFilter = "all";
-  currentTab = "class";
 
-  document.getElementById("dashboard").classList.add("hidden");
-  document.getElementById("newPost").classList.add("hidden");
-  document.getElementById("profile").classList.add("hidden");
-  document.getElementById("navMenu").classList.add("hidden");
-  document.getElementById("avatar").classList.add("hidden");
+function formatDate(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleString("en-GB");
+}
 
-  document.getElementById("landing").classList.remove("hidden");
-  document.getElementById("emailInput").value = "";
+function escapeHtml(text) {
+  if (!text) return "";
 
-  lucide.createIcons();
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
