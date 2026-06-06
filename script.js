@@ -1,22 +1,43 @@
+document.addEventListener("DOMContentLoaded", function () {
+    const loginBtn = document.getElementById("loginBtn");
+
+    if (loginBtn) {
+        loginBtn.addEventListener("click", login);
+    }
+});
+
 let posts = [];
 let coverRequests = [];
 
 function login() {
-    const email = document.getElementById("emailInput").value;
+    const emailInput = document.getElementById("emailInput");
+    const loginScreen = document.getElementById("loginScreen");
+    const app = document.getElementById("app");
 
-    if (email.trim() === "") {
+    if (!emailInput || !loginScreen || !app) {
+        alert("Page elements not found. Please check index.html IDs.");
+        return;
+    }
+
+    const email = emailInput.value.trim().toLowerCase();
+
+    if (email === "") {
         alert("Please enter an email address.");
         return;
     }
 
-    document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
+    if (!email.endsWith("@greenwichwaldorfschool.com")) {
+        alert("Access restricted to Greenwich Waldorf School staff emails only.");
+        return;
+    }
+
+    loginScreen.style.display = "none";
+    app.classList.remove("hidden");
+    app.style.display = "flex";
 }
 
 function showSection(sectionId) {
-    const sections = document.querySelectorAll(".section");
-
-    sections.forEach(section => {
+    document.querySelectorAll(".section").forEach(section => {
         section.classList.remove("active");
     });
 
@@ -29,37 +50,29 @@ function addPost() {
 
     if (!content) return;
 
-    const post = {
+    posts.unshift({
         text: content,
         date: new Date().toLocaleString(),
         likes: 0
-    };
-
-    posts.unshift(post);
+    });
 
     renderPosts();
-
     input.value = "";
 }
 
 function renderPosts() {
     const postList = document.getElementById("postList");
-
     postList.innerHTML = "";
 
     posts.forEach((post, index) => {
-
         const div = document.createElement("div");
-
         div.className = "post";
 
         div.innerHTML = `
             <p>${post.text}</p>
             <small>${post.date}</small>
             <br><br>
-            <button onclick="likePost(${index})">
-                👍 Like (${post.likes})
-            </button>
+            <button onclick="likePost(${index})">👍 Like (${post.likes})</button>
         `;
 
         postList.appendChild(div);
@@ -72,9 +85,7 @@ function likePost(index) {
 }
 
 function addCoverRequest() {
-
     const input = document.getElementById("coverInput");
-
     const text = input.value.trim();
 
     if (!text) return;
@@ -85,29 +96,21 @@ function addCoverRequest() {
     });
 
     renderCoverRequests();
-
     input.value = "";
 }
 
 function renderCoverRequests() {
-
     const coverList = document.getElementById("coverList");
-
     coverList.innerHTML = "";
 
     coverRequests.forEach((request, index) => {
-
         const div = document.createElement("div");
-
         div.className = "post";
 
         div.innerHTML = `
             <h4>${request.text}</h4>
             <p>Status: ${request.status}</p>
-
-            <button onclick="markCovered(${index})">
-                Mark Covered
-            </button>
+            <button onclick="markCovered(${index})">Mark Covered</button>
         `;
 
         coverList.appendChild(div);
@@ -115,8 +118,6 @@ function renderCoverRequests() {
 }
 
 function markCovered(index) {
-
     coverRequests[index].status = "Covered";
-
     renderCoverRequests();
 }
