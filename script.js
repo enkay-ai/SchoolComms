@@ -1,5 +1,4 @@
-const API_URL = "https://script.google.com/a/macros/greenwichwaldorfschool.com/s/AKfycbxrA3h4Xi3tsiFXXUDWbJA06AqprKy9yUp2SyuMTsoehphnB0yq8eufbyOox-Fu4rd23g/exec";
-
+const API_URL = "https://script.google.com/macros/s/AKfycbxrA3h4Xi3tsiFXXUDWbJA06AqprKy9yUp2SyuMTsoehphnB0yq8eufbyOox-Fu4rd23g/exec";
 let currentUser = null;
 let allPosts = [];
 let currentTab = "class";
@@ -41,7 +40,7 @@ async function login() {
     return;
   }
 
-  const res = await apiGet("getCurrentUser");
+  const res = await apiGet("getCurrentUser", { email: email });
 
   if (!res.success) {
     alert(res.message);
